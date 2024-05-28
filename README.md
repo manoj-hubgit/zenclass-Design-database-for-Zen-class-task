@@ -1,0 +1,133 @@
+# Zen Class Programme Database
+
+This project sets up a MongoDB database for the Zen Class programme. 
+It includes collections for users, codekata, attendance, topics, tasks, company drives, and mentors.
+
+db.users.insertMany([
+  { name: "Manoj", age: 20, mentor_id: ObjectId("6652bc59e827d8ff05aabb82") },
+  { name: "John", age: 22, mentor_id: ObjectId("6652bc59e827d8ff05aabb83") },
+  { name: "Karthi", age: 24, mentor_id: ObjectId("6652bc59e827d8ff05aabb84") },
+  { name: "Divya", age: 22, mentor_id: ObjectId("6652bc59e827d8ff05aabb82") },
+  { name: "Jacob", age: 21, mentor_id: ObjectId("6652bc59e827d8ff05aabb83") }
+]);
+
+db.codekata.insertMany([
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb66"), problems_solved: 30 },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb67"), problems_solved: 35 },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb68"), problems_solved: 40 },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb69"), problems_solved: 45 },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb6a"), problems_solved: 50 }
+]);
+
+db.attendance.insertMany([
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb66"), date: ISODate("2020-10-15"), status: "Present" },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb67"), date: ISODate("2020-10-16"), status: "Absent" },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb68"), date: ISODate("2020-10-17"), status: "Present" },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb69"), date: ISODate("2020-10-18"), status: "Absent" },
+  { user_id: ObjectId("6652b6c1e827d8ff05aabb6a"), date: ISODate("2020-10-19"), status: "Present" }
+]);
+
+db.topics.insertMany([
+  { title: "MongoDB",date: ISODate("2020-10-01"),user_id: ObjectId('6652b6c1e827d8ff05aabb66') },
+  { title: "Aggregation", date: ISODate("2020-10-10"),user_id: ObjectId('6652b6c1e827d8ff05aabb67') },
+  { title: "Javascript basic",date: ISODate("2020-10-15"),user_id: ObjectId('6652b6c1e827d8ff05aabb68') },
+  { title: "useState",date: ISODate("2020-10-20"),user_id: ObjectId('6652b6c1e827d8ff05aabb69') },
+  { title: "Bootstrap",date: ISODate("2020-10-25"),user_id: ObjectId('6652b6c1e827d8ff05aabb6a') }
+]);
+
+db.tasks.insertMany([
+  { title: "Task 1", date_assigned: ISODate("2020-10-01"), submitted: true, user_id: ObjectId("6652b6c1e827d8ff05aabb66") },
+  { title: "Task 2", date_assigned: ISODate("2020-10-10"), submitted: false, user_id: ObjectId("6652b6c1e827d8ff05aabb67") },
+  { title: "Task 3", date_assigned: ISODate("2020-10-15"), submitted: true, user_id: ObjectId("6652b6c1e827d8ff05aabb68") },
+  { title: "Task 4", date_assigned: ISODate("2020-10-20"), submitted: false, user_id: ObjectId("6652b6c1e827d8ff05aabb69") },
+  { title: "Task 5", date_assigned: ISODate("2020-10-25"), submitted: true, user_id: ObjectId("6652b6c1e827d8ff05aabb6a") }
+]);
+
+db.company_drives.insertMany([
+  { company_name: "Google", drive_date: ISODate("2020-10-16"), students_appeared: [ObjectId("6652b6c1e827d8ff05aabb66"), ObjectId("6652b6c1e827d8ff05aabb67")] },
+  { company_name: "Amazon", drive_date: ISODate("2020-10-20"), students_appeared: [ObjectId("6652b6c1e827d8ff05aabb68"), ObjectId("6652b6c1e827d8ff05aabb69")] },
+  { company_name: "Guvi", drive_date: ISODate("2020-10-25"), students_appeared: [ObjectId("6652b6c1e827d8ff05aabb6a")] }
+]);
+
+db.mentors.insertMany([
+  { name: "Rupan", mentees: [ObjectId("6652b6c1e827d8ff05aabb66"), ObjectId("6652b6c1e827d8ff05aabb69"), 1,2,3,4,5,6,7,8,9,10,11,12,13,14] },
+  { name: "Kumar", mentees: [ObjectId("6652b6c1e827d8ff05aabb67"), ObjectId("6652b6c1e827d8ff05aabb6a"),16,17] },
+  { name: "Jack", mentees: [ObjectId("6652b6c1e827d8ff05aabb6a"),21,22,23,24,25,26,28,29,30,31,32,33,34,35,36,37] }
+]);
+
+
+1)Find all the topics and tasks which are thought in the month of October
+    answer:
+      db.topics.aggregate([
+      {$match: {date: {$gte: ISODate("2020-10-01T00:00:00Z"),$lt: ISODate("2020-11-01T00:00:00Z")}}},
+      {$lookup: {
+      from: "tasks",
+      localField: "task_id",
+      foreignField: "_id",
+      as: "task_details"}},
+      {$project: {
+      title: 1,
+      date: 1,
+      task_details: 1}},]);
+
+2)Find all the company drives which appeared between 15 oct-2020 and 31-oct-2020
+    answer: 
+        db.company_drives.find({
+        drive_date:{
+        $gt:ISODate("2020-10-15"),
+        $lt: ISODate("2020-11-01")
+        } 
+        })
+
+3)Find all the company drives and students who are appeared for the placement.
+    answer:
+        db.company_drives.aggregate([{
+        $lookup:{
+        from:'users',
+        localField:'students_appeared',
+        foreignField:'_id',
+        as:"placement_details"}},
+        {
+        $project:{
+        _id:0,
+        company_name:1,
+        student_name:'$placement_details.name'}}]).toArray();
+
+
+4)Find the number of problems solved by the user in codekata
+    answer:
+        db.codekata.aggregate([{
+        $lookup:{from:'users',localField:'user_id',foreignField:'_id',as:'names'}},
+        {$project:{_id:0,problems_solved:1,name:'$names.name'}},
+        {$unwind:'$name'}]);
+
+5)Find all the mentors with who has the mentee's count more than 15
+    answer:
+        db.mentors.aggregate([
+        {$match: {
+        $expr: {
+        $gt: [{ $size: "$mentees" }, 15] }}},
+        {$project: {_id: 0, name: 1}}]);
+
+
+6)Find the number of users who are absent and task is not submitted  between 15 oct-2020 and 31-oct-2020
+    answer:     
+        db.attendance.aggregate([{
+        $match: {
+        date: {
+        $gte: ISODate("2020-10-15"),
+        $lt: ISODate("2020-11-01")},
+        status: "Absent"}},
+        { $lookup: {
+        from: "tasks",
+        localField: "user_id",
+        foreignField: "user_id",
+        as: "tasks"}},
+        { $unwind: "$tasks" },
+        { $match: {
+        "tasks.submitted": false,
+        "tasks.date_assigned": {
+        $gte: ISODate("2020-10-15"),
+        $lt: ISODate("2020-11-01")}}},
+        {$count: "absent_and_not_submitted"}]);
+
